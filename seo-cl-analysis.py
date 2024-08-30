@@ -355,15 +355,19 @@ def print_media_info(response):
             color_print('FAIL', f'{label}', 'No source found')
 
     # Check for images
-    images = soup.find_all(['img'])
+    images = soup.find_all(['img', 'e-img'])
     for img in images:
         alt_text = img.get('alt', '')
+        alt_text = alt_text if len(alt_text) < 50 else alt_text[:50] + '...'
         src = img.get('src', '')
         if src.startswith('data:'):
             color_print('NEUTRAL', 'Image',
                         'Inline image detected, no further analysis')
             continue
         img_name = src.split('/')[-1] if '/' in src else src
+        img_name = img_name.split('?')[0]  # Remove query parameters
+        img_name = img_name.split('#')[0]  # Remove fragments
+        img_name = img_name if len(img_name) < 50 else img_name[:50] + '...'
         absolute_url = requests.compat.urljoin(
             base_url, src)  # Resolve relative URLs
 
@@ -528,27 +532,28 @@ def main():
     check_content = args.content or args.all
     perform_semantic = args.semantic or args.all
 
+    if check_server:
+        check_server_info(url)  # Check server information
+
     # Fetch URL content
     response = fetch_url_content(url, follow_redirects)
 
     if response:
         print_redirect_history(response)  # Output redirect history
         print_status_code(response)  # Output status code
+        if google_check:
+            check_google_index_status(url)  # Check if URL is indexed by Google
         # Output SEO-relevant fields in <header>
         print_seo_relevant_header_info(response)
         if check_content:
             # Output all H1, H2, and H3 tags if content parameter is set
             print_heading_tags(response)
+        if perform_semantic:
+            semantic_analysis(response)  # Perform semantic analysis
         if analyze_media:
             print_media_info(response)  # Output media content information
         if check_links:
             print_links_info(response)  # Output internal and external links
-        if check_server:
-            check_server_info(url)  # Check server information
-        if google_check:
-            check_google_index_status(url)  # Check if URL is indexed by Google
-        if perform_semantic:
-            semantic_analysis(response)  # Perform semantic analysis
     else:
         color_print('FAIL', 'Fetch', 'Failed to retrieve the URL.')
 
