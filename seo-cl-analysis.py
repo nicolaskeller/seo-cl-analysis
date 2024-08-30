@@ -225,7 +225,7 @@ def print_links_info(response):
     color_print('SECTION', 'Internal links', '')
     for url in internal_links:
         try:
-            link_response = requests.get(url)
+            link_response = requests.get(url, stream=True)
             if 200 <= link_response.status_code < 300:
                 status = 'GOOD'
             elif 300 <= link_response.status_code < 400:
@@ -241,7 +241,7 @@ def print_links_info(response):
     color_print('SECTION', 'External links', '')
     for url in external_links:
         try:
-            link_response = requests.get(url)
+            link_response = requests.get(url, stream=True)
             if 200 <= link_response.status_code < 300:
                 status = 'GOOD'
             elif 300 <= link_response.status_code < 400:
