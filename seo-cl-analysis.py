@@ -207,7 +207,7 @@ def print_links_info(response):
     for link in links:
         href = link['href']
         # Ignore links with 'tel' and 'mailto' prefixes
-        if href.startswith('tel:') or href.startswith('mailto:'):
+        if href.startswith('tel:') or href.startswith('mailto:') or href.startswith('javascript:'):
             continue
 
         full_url = requests.compat.urljoin(response.url, href)
@@ -355,7 +355,7 @@ def print_media_info(response):
             color_print('FAIL', f'{label}', 'No source found')
 
     # Check for images
-    images = soup.find_all('img')
+    images = soup.find_all(['img'])
     for img in images:
         alt_text = img.get('alt', '')
         src = img.get('src', '')
