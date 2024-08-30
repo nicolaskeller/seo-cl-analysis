@@ -15,10 +15,13 @@ COLOR_GREEN = '\033[92m'  # Green
 COLOR_YELLOW = '\033[93m'  # Yellow
 COLOR_RED = '\033[91m'     # Red
 COLOR_BLUE = '\033[94m'    # Light Blue
+COLOR_PURPLE = '\033[95m'  # Purple
+COLOR_LIGHT_GRAY = '\033[37m'  # Light Gray
+COLOR_LIGHT_BLUE = '\033[96m'  # Light Blue
 COLOR_RESET = '\033[0m'    # Reset
 SYMBOL_GOOD = '●'          # Green dot
 SYMBOL_NEUTRAL = '●'       # Yellow dot
-SYMBOL_FAIL = '!'          # Exclamation mark
+SYMBOL_FAIL = '■'          # Exclamation mark
 
 # SEO character count limits
 SEO_TITLE_LIMITS = (50, 60)  # Optimal: 50-60 characters
@@ -54,20 +57,24 @@ def color_print(status, label, content):
     if status == 'GOOD':
         symbol = f"{COLOR_GREEN}{SYMBOL_GOOD}{COLOR_RESET}"
     elif status == 'NEUTRAL':
-        symbol = f"{COLOR_YELLOW}{SYMBOL_NEUTRAL}{COLOR_RESET}"
+        symbol = f"{COLOR_LIGHT_GRAY}{SYMBOL_NEUTRAL}{COLOR_RESET}"
     elif status == 'FAIL':
         symbol = f"{COLOR_RED}{SYMBOL_FAIL}{COLOR_RESET}"
     elif status == 'SECTION':
-        symbol = f"{COLOR_BLUE}-{COLOR_RESET}"
+        symbol = f"{COLOR_BLUE}>{COLOR_RESET}"
     else:
         symbol = ''  # Default without symbol
 
-    print(f"{symbol} {COLOR_BLUE}{label}:{COLOR_RESET} {content}")
-
+    print(f"{symbol} {COLOR_LIGHT_BLUE}{label}{':' if content else ''}{COLOR_RESET} {content}")
 
 def print_separator():
     """ Prints a separator for output. """
-    print(f"{COLOR_BLUE}{'-' * 50}{COLOR_RESET}")
+    print(f"{COLOR_RESET}{'-' * 50}{COLOR_RESET}")
+    
+def section_header(title):
+    """ Prints a separator for output. """
+    print()
+    print(f"{COLOR_BLUE}>>> {title} >>>{COLOR_RESET}")
 
 
 def fetch_url_content(url, follow_redirects):
@@ -81,6 +88,7 @@ def fetch_url_content(url, follow_redirects):
     Returns:
     response (requests.Response): The response object containing the URL content.
     """
+    section_header('Performance')
     try:
         start_time = time.time()
         response = requests.get(url, allow_redirects=follow_redirects)
@@ -104,9 +112,8 @@ def print_redirect_history(response):
     Parameters:
     response (requests.Response): The response object containing the URL content.
     """
+    section_header('Redirects')
     if response.history:
-        print_separator()
-        color_print('SECTION', 'Redirect history', '')
         for i, resp in enumerate(response.history):
             color_print(
                 'NEUTRAL', f"Step {i + 1}", f"{resp.url} (Status Code: {resp.status_code})")
@@ -114,7 +121,6 @@ def print_redirect_history(response):
                     f"{response.url} (Status Code: {response.status_code})")
     else:
         color_print('NEUTRAL', 'Redirect history', 'No redirects found.')
-    print_separator()
 
 
 def print_status_code(response):
@@ -124,9 +130,9 @@ def print_status_code(response):
     Parameters:
     response (requests.Response): The response object containing the URL content.
     """
+    section_header('Status Code')
     status = 'GOOD' if response.status_code == 200 else 'FAIL'
     color_print(status, 'Status Code', response.status_code)
-    print_separator()
 
 
 def semantic_analysis(response):
@@ -136,6 +142,8 @@ def semantic_analysis(response):
     Parameters:
     response (requests.Response): The response object containing the URL content.
     """
+    section_header('Semantic Analysis')
+
     soup = BeautifulSoup(response.text, 'html.parser')
     texts = soup.stripped_strings
     text_content = ' '.join(texts)
@@ -180,7 +188,6 @@ def semantic_analysis(response):
                       key=lambda item: item[1], reverse=True)[:10]
     color_print('GOOD', 'Relevant Keywords',
                 ', '.join([kw[0] for kw in keywords]))
-    print_separator()
 
 
 def print_links_info(response):
@@ -190,6 +197,7 @@ def print_links_info(response):
     Parameters:
     response (requests.Response): The response object containing the URL content.
     """
+    section_header('Link Analysis')
     soup = BeautifulSoup(response.text, 'html.parser')
     links = soup.find_all('a', href=True)
     internal_links = []
@@ -243,7 +251,6 @@ def print_links_info(response):
         except requests.RequestException as e:
             color_print('FAIL', 'Link', f"Error fetching URL: {url} - {e}")
 
-    print_separator()
 
 
 def evaluate_field_length(content, optimal_range):
@@ -272,6 +279,9 @@ def print_seo_relevant_header_info(response):
     Parameters:
     response (requests.Response): The response object containing the URL content.
     """
+    
+    section_header('SEO Header Analysis')
+
     soup = BeautifulSoup(response.text, 'html.parser')
     header = soup.find('head')
 
@@ -298,7 +308,6 @@ def print_seo_relevant_header_info(response):
 
     else:
         color_print('FAIL', 'Header', 'No <head> section found.')
-    print_separator()
 
 
 def print_heading_tags(response):
@@ -308,6 +317,7 @@ def print_heading_tags(response):
     Parameters:
     response (requests.Response): The response object containing the URL content.
     """
+    section_header('SEO Content Analysis')
     soup = BeautifulSoup(response.text, 'html.parser')
     if not any(soup.find_all(['h1'])):
         color_print('FAIL', 'Headings', 'No H1 tag found.')
@@ -322,8 +332,6 @@ def print_heading_tags(response):
             color_print(status, heading.upper(), content)
     if len(soup.find_all(['h1'])):
         color_print('FAIL', 'Headings', 'Multiple H1 tags found.')
-    print_separator()
-
 
 def print_media_info(response):
     """
@@ -332,6 +340,7 @@ def print_media_info(response):
     Parameters:
     response (requests.Response): The response object containing the URL content.
     """
+    section_header('SEO Media Analysis')
     soup = BeautifulSoup(response.text, 'html.parser')
     base_url = response.url  # Base URL for resolving relative URLs
 
@@ -369,7 +378,6 @@ def print_media_info(response):
             color_print('FAIL', 'Image',
                         f"{img_name}, Error fetching image: {e}")
 
-    print_separator()
 
 
 def check_google_index_status(url):
@@ -382,6 +390,7 @@ def check_google_index_status(url):
     Note:
     This function performs a search query using Google's 'site:' operator.
     """
+    section_header('Google Index Status')
     try:
         search_url = f"https://www.google.com/search?q=site:{url}"
         headers = {
@@ -400,7 +409,6 @@ def check_google_index_status(url):
         color_print('FAIL', 'Google Index',
                     f"Error while checking Google index: {e}")
         
-    print_separator()
 
 
 def check_server_info(url):
@@ -410,6 +418,8 @@ def check_server_info(url):
     Parameters:
     url (str): The URL to check.
     """
+    section_header('Server Information')
+
     parsed_url = urlparse(url)
     base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
@@ -463,8 +473,6 @@ def check_server_info(url):
         color_print('FAIL', 'Server Software',
                     'Error retrieving server software information')
         
-    print_separator()
-
 
 def main():
     # Initialize argument parser
