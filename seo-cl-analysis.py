@@ -330,7 +330,7 @@ def print_heading_tags(response):
             else:
                 status = 'GOOD' if content else 'FAIL'
             color_print(status, heading.upper(), content)
-    if len(soup.find_all(['h1'])):
+    if len(soup.find_all(['h1'])) > 1:
         color_print('FAIL', 'Headings', 'Multiple H1 tags found.')
 
 def print_media_info(response):
