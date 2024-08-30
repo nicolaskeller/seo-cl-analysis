@@ -293,8 +293,8 @@ def print_seo_relevant_header_info(response):
         canonical_link = header.find('link', attrs={'rel': 'canonical'})
         canonical_content = canonical_link['href'] if canonical_link and canonical_link.get(
             'href') else ''
-        status = 'GOOD' if canonical_content else 'FAIL'
-        color_print(status, 'Canonical', canonical_content)
+        if canonical_content:
+            color_print('GOOD', 'Canonical', canonical_content)
 
     else:
         color_print('FAIL', 'Header', 'No <head> section found.')
@@ -309,6 +309,8 @@ def print_heading_tags(response):
     response (requests.Response): The response object containing the URL content.
     """
     soup = BeautifulSoup(response.text, 'html.parser')
+    if not any(soup.find_all(['h1'])):
+        color_print('FAIL', 'Headings', 'No H1 tag found.')
     for heading in ['h1', 'h2', 'h3']:
         tags = soup.find_all(heading)
         for tag in tags:
@@ -318,6 +320,8 @@ def print_heading_tags(response):
             else:
                 status = 'GOOD' if content else 'FAIL'
             color_print(status, heading.upper(), content)
+    if len(soup.find_all(['h1'])):
+        color_print('FAIL', 'Headings', 'Multiple H1 tags found.')
     print_separator()
 
 
@@ -395,6 +399,8 @@ def check_google_index_status(url):
     except requests.RequestException as e:
         color_print('FAIL', 'Google Index',
                     f"Error while checking Google index: {e}")
+        
+    print_separator()
 
 
 def check_server_info(url):
@@ -456,6 +462,8 @@ def check_server_info(url):
     except requests.RequestException:
         color_print('FAIL', 'Server Software',
                     'Error retrieving server software information')
+        
+    print_separator()
 
 
 def main():
