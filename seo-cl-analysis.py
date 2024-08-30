@@ -340,8 +340,9 @@ def print_heading_tags(response):
             color_print(status, heading.upper(), content)
     if len(soup.find_all(['h1'])) > 1:
         color_print('FAIL', 'Headings', 'Multiple H1 tags found.')
-
-
+        
+    color_print('SECTION', 'Images', f'With ALT text: {len(soup.find_all("img", alt=True))}, Without ALT text: {len(soup.find_all("img", alt=False))}')
+                
 def print_media_info(response):
     """
     Outputs information about video, audio, and image content.
