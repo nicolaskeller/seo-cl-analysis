@@ -67,10 +67,12 @@ def color_print(status, label, content):
 
     print(f"{symbol} {COLOR_LIGHT_BLUE}{label}{':' if content else ''}{COLOR_RESET} {content}")
 
+
 def print_separator():
     """ Prints a separator for output. """
     print(f"{COLOR_RESET}{'-' * 50}{COLOR_RESET}")
-    
+
+
 def section_header(title):
     """ Prints a separator for output. """
     print()
@@ -252,7 +254,6 @@ def print_links_info(response):
             color_print('FAIL', 'Link', f"Error fetching URL: {url} - {e}")
 
 
-
 def evaluate_field_length(content, optimal_range):
     """
     Evaluates the length of a content field against an optimal character range.
@@ -279,7 +280,7 @@ def print_seo_relevant_header_info(response):
     Parameters:
     response (requests.Response): The response object containing the URL content.
     """
-    
+
     section_header('SEO Header Analysis')
 
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -305,6 +306,13 @@ def print_seo_relevant_header_info(response):
             'href') else ''
         if canonical_content:
             color_print('GOOD', 'Canonical', canonical_content)
+
+        # Robots meta tag output
+        robots_meta = header.find('meta', attrs={'name': 'robots'})
+        robots_content = robots_meta['content'] if robots_meta and robots_meta.get(
+            'content') else ''
+        if robots_content:
+            color_print('GOOD', 'Robots', robots_content)
 
     else:
         color_print('FAIL', 'Header', 'No <head> section found.')
@@ -332,6 +340,7 @@ def print_heading_tags(response):
             color_print(status, heading.upper(), content)
     if len(soup.find_all(['h1'])) > 1:
         color_print('FAIL', 'Headings', 'Multiple H1 tags found.')
+
 
 def print_media_info(response):
     """
@@ -383,7 +392,6 @@ def print_media_info(response):
                         f"{img_name}, Error fetching image: {e}")
 
 
-
 def check_google_index_status(url):
     """
     Checks if the URL is indexed by Google.
@@ -412,7 +420,6 @@ def check_google_index_status(url):
     except requests.RequestException as e:
         color_print('FAIL', 'Google Index',
                     f"Error while checking Google index: {e}")
-        
 
 
 def check_server_info(url):
@@ -476,7 +483,7 @@ def check_server_info(url):
     except requests.RequestException:
         color_print('FAIL', 'Server Software',
                     'Error retrieving server software information')
-        
+
 
 def main():
     # Initialize argument parser
